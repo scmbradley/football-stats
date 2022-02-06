@@ -33,6 +33,23 @@ def last_five(result, previous):
         return previous[-4:] + result
 
 
+def games_with_team(name, frame=df):
+    return frame[(frame["home"] == name) | (frame["visitor"] == name)]
+
+
+def games_in_season(season, frame=df, before=None):
+    season = frame[frame["Season"] == season]
+    if before is not None:
+        season = season[season["Date"] < before]
+    return season
+
+
+def get_history(team, season, before=None, frame=df):
+    with_team = games_with_team(team, frame=frame)
+    in_season = games_in_season(season, frame=with_team, before=before)
+    return in_season
+
+
 def make_history(team_name, result):
     previous_results = results_dict[team_name]
     updated_results = last_five(result, previous_results)

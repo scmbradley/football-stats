@@ -8,10 +8,6 @@ with open(clean_in) as d:
     df = pandas.read_csv(d)
 
 
-def games_with_team(name):
-    return df[(df["home"] == name) | (df["visitor"] == name)]
-
-
 def predictor_tuple(df_counter):
     try:
         h = df_counter["H"]
