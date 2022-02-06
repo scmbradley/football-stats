@@ -44,42 +44,53 @@ def games_in_season(season, frame=df, before=None):
     return season
 
 
-def get_history(team, season, before=None, frame=df):
+def get_history_frame(team, season, before=None, frame=df):
     with_team = games_with_team(team, frame=frame)
     in_season = games_in_season(season, frame=with_team, before=before)
     return in_season
 
 
-def make_history(team_name, result):
-    previous_results = results_dict[team_name]
-    updated_results = last_five(result, previous_results)
-    results_dict[team_name] = updated_results
-    return previous_results
-
-
 home_result = {"H": "W", "D": "D", "A": "L"}
 away_result = {"H": "L", "D": "D", "A": "W"}
 
-pf_away = []
-pf_home = []
 
-# This is slow. Is there a better way?
-for row in df.iterrows():
-    r = row[1]
-    home_name = r["home"]
-    away_name = r["visitor"]
-    h_result = home_result[r["result"]]
-    a_result = away_result[r["result"]]
-    pf_home.append(make_history(home_name, h_result))
-    pf_away.append(make_history(away_name, a_result))
+def game_to_result(game, team):
+    if game["home"] == team:
+        return home_result[game["result"]]
+    else:
+        return away_result[game["result"]]
 
-pf_home_3 = [x[-3:] for x in pf_home]
-pf_away_3 = [x[-3:] for x in pf_away]
 
-df["past_five_home"] = pf_home
-df["past_five_away"] = pf_away
-df["past_three_home"] = pf_home_3
-df["past_three_away"] = pf_away_3
+def get_history_string(team, season, before=None, frame=df):
+    hist_frame = get_history_frame(team, season, before, frame)
+    result_series = hist_frame.apply(lambda x: game_to_result(x, team), axis=1)
+    return "".join(result_series.tolist())
+
+
+# def make_history(team_name, result):
+#     previous_results = results_dict[team_name]
+#     updated_results = last_five(result, previous_results)
+#     results_dict[team_name] = updated_results
+#     return previous_results
+# pf_away = []
+# pf_home = []
+# # This is slow. Is there a better way?
+# for row in df.iterrows():
+#     r = row[1]
+#     home_name = r["home"]
+#     away_name = r["visitor"]
+#     h_result = home_result[r["result"]]
+#     a_result = away_result[r["result"]]
+#     pf_home.append(make_history(home_name, h_result))
+#     pf_away.append(make_history(away_name, a_result))
+
+# pf_home_3 = [x[-3:] for x in pf_home]
+# pf_away_3 = [x[-3:] for x in pf_away]
+
+# df["past_five_home"] = pf_home
+# df["past_five_away"] = pf_away
+# df["past_three_home"] = pf_home_3
+# df["past_three_away"] = pf_away_3
 
 clean_out = Path("england_clean.csv")
 df.to_csv(clean_out)
