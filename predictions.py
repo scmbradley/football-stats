@@ -5,7 +5,7 @@ from math import log2
 
 clean_in = Path("england_clean.csv")
 with open(clean_in) as d:
-    df = pandas.read_csv(d)
+    df = pandas.read_csv(d, keep_default_na=False)
 
 
 def predictor_tuple(df_counter):
@@ -27,6 +27,8 @@ def predictor_tuple(df_counter):
 
 p_tup_dict = {"H": 0, "A": 1, "D": 2}
 
+df["past_five_home"] = df.apply(lambda x: x["home_history"][-5:], axis=1)
+
 crude_predictor = {}
 for history in df["past_five_home"].unique():
     vc = df[df["past_five_home"] == history]["result"].value_counts()
@@ -46,8 +48,6 @@ def score_prediction(prediction, result):
     prob = prediction[p_tup_dict[result]] / sum(prediction)
     return log2(prob)
 
-
-## To Do: Drop NaN.
 
 # Predict based just on number of home wins/ home draws/ home losses
 climatology = predictor_tuple(df["result"].value_counts())
