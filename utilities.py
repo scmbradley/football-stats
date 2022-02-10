@@ -71,5 +71,20 @@ def get_full_season(team, season, frame):
     return hf.values.tolist()[-1]["home_history"]
 
 
+def prediction_from_history(history_string, home=True):
+    w, l, d = 0, 0, 0
+    for game in history_string:
+        if game == "W":
+            w += 1
+        elif game == "L":
+            l += 1
+        elif game == "D":
+            d += 1
+    if home:
+        return w, l, d
+    else:
+        return l, w, d
+
+
 def get_final_points(team, season, frame):
     return points_from_history(get_full_season(team, season, frame))
