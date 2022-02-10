@@ -66,6 +66,7 @@ def last_n_games(frame, n, away=False):
 
 
 def get_full_season(team, season, frame):
+    """Get full season as a string."""
     hf = get_history_frame(team, season, frame)
     return hf.values.tolist()[-1]["home_history"]
 

@@ -1,7 +1,6 @@
 from pathlib import Path
-
+import pandas
 from math import log2
-
 
 clean_in = Path("england_clean.csv")
 with open(clean_in) as d:
@@ -43,8 +42,14 @@ df["home_predictions"] = home_predictions
 
 
 # Using the log score because it's easy to implement
+# Not really, I just want to annoy Richard Pettigrew
 def score_prediction(prediction, result):
-    index = p_tup_dict[result]
+    """
+    Scores a prediction based on a result.
+
+    prediction: a tuple of (H,A,D) where each of H,A,D is an int
+    result: one of H,A,D.
+    """
     prob = prediction[p_tup_dict[result]] / sum(prediction)
     return log2(prob)
 
@@ -52,12 +57,18 @@ def score_prediction(prediction, result):
 # Predict based just on number of home wins/ home draws/ home losses
 climatology = predictor_tuple(df["result"].value_counts())
 
+
 five_game_prediction_scores = df.apply(
-    lambda x: score_prediction(x["home_predictions"], x["result"]), axis=1
+    lambda x: score_prediction(x["home_predictions"], x["result"]),
+    axis=1,
 )
 
 climatology_prediction_scores = df.apply(
-    lambda x: score_prediction(climatology, x["result"]), axis=1
+    lambda x: score_prediction(climatology, x["result"]),
+    axis=1,
 )
 
-third_scores = df.apply(lambda x: score_prediction((1, 1, 1), x["result"]), axis=1)
+third_scores = df.apply(
+    lambda x: score_prediction((1, 1, 1), x["result"]),
+    axis=1,
+)
