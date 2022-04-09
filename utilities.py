@@ -1,5 +1,7 @@
 """Utilities for doing generating new columns for football predictions"""
 
+from numpy import log2
+
 
 def get_teams_in_frame(frame):
     """Returns a Series of names of teams in the frame."""
@@ -110,3 +112,63 @@ def prediction_from_history(history_string, home=True):
 def get_final_points(team, season, frame):
     """Return team's final points tally from season."""
     return points_from_history(get_full_season(team, season, frame))
+
+
+# functions for scoring predictions
+
+
+def predictor_tuple(df_counter):
+    """
+    Return a predictor tuple based on a counter.
+
+    A predictor tuple is just a tuple of numbers representing the relative probabilities of
+    home win, away win and draw.
+    """
+    try:
+        h = df_counter["H"]
+    except KeyError:
+        h = 0
+    try:
+        a = df_counter["A"]
+    except KeyError:
+        a = 0
+    try:
+        d = df_counter["D"]
+    except KeyError:
+        d = 0
+
+    return h, a, d
+
+
+# Where in the predictor tuple can I find `key` number?
+p_tup_dict = {"H": 0, "A": 1, "D": 2}
+
+
+def probability_for_outcome(prediction, outcome):
+    """Translate a predictor tuple into a probability."""
+    return prediction[p_tup_dict[outcome]] / sum(prediction)
+
+
+# Using the log score because it's easy to implement
+# Not really, I just want to annoy Richard Pettigrew
+def score_prediction(prediction, result):
+    """
+    Scores a prediction based on a result.
+
+    prediction: a tuple of (H,A,D) where each of H,A,D is an int
+    result: one of H,A,D.
+    """
+    return log2(probability_for_outcome(prediction, result))
+
+
+# OK fine I'll implement the Brier score too.
+# Happy now, Richard?
+def score_prediction_brier(prediction, result):
+    h_prob = probability_for_outcome(prediction, "H")
+    a_prob = probability_for_outcome(prediction, "A")
+    d_prob = probability_for_outcome(prediction, "D")
+    return (
+        ((result == "H") - h_prob) ** 2
+        + ((result == "A") - a_prob) ** 2
+        + ((result == "D") - d_prob) ** 2
+    )
