@@ -114,67 +114,87 @@ def get_final_points(team, season, frame):
     return points_from_history(get_full_season(team, season, frame))
 
 
-# functions for scoring predictions
+# # functions for scoring predictions
 
 
-def predictor_tuple(df_counter):
-    """
-    Return a predictor tuple based on a counter.
+# def predictor_tuple(df_counter):
+#     """
+#     Return a predictor tuple based on a counter.
 
-    A predictor tuple is just a tuple of numbers representing the relative probabilities of
-    home win, away win and draw.
-    """
-    try:
-        h = df_counter["H"]
-    except KeyError:
-        h = 0
-    try:
-        a = df_counter["A"]
-    except KeyError:
-        a = 0
-    try:
-        d = df_counter["D"]
-    except KeyError:
-        d = 0
+#     A predictor tuple is just a tuple of numbers representing the relative probabilities of
+#     home win, away win and draw.
+#     """
+#     try:
+#         h = df_counter["H"]
+#     except KeyError:
+#         h = 0
+#     try:
+#         a = df_counter["A"]
+#     except KeyError:
+#         a = 0
+#     try:
+#         d = df_counter["D"]
+#     except KeyError:
+#         d = 0
 
-    return h, a, d
-
-
-# Where in the predictor tuple can I find `key` number?
-p_tup_dict = {"H": 0, "A": 1, "D": 2}
+#     return h, a, d
 
 
-def probability_for_outcome(prediction, outcome):
-    """Translate a predictor tuple into a probability."""
-    return prediction[p_tup_dict[outcome]] / sum(prediction)
+# # Where in the predictor tuple can I find `key` number?
+# p_tup_dict = {"H": 0, "A": 1, "D": 2}
 
 
-# Using the log score because it's easy to implement
-# Not really, I just want to annoy Richard Pettigrew
-def score_prediction_log(prediction, result):
-    """
-    Scores a prediction based on a result.
-
-    prediction: a tuple of (H,A,D) where each of H,A,D is an int
-    result: one of H,A,D.
-    """
-    return log2(probability_for_outcome(prediction, result))
+# def probability_for_outcome(prediction, outcome):
+#     """Translate a predictor tuple into a probability."""
+#     return prediction[p_tup_dict[outcome]] / sum(prediction)
 
 
-# OK fine I'll implement the Brier score too.
-# Happy now, Richard?
-def score_prediction_brier(prediction, result):
-    h_prob = probability_for_outcome(prediction, "H")
-    a_prob = probability_for_outcome(prediction, "A")
-    d_prob = probability_for_outcome(prediction, "D")
-    return (
-        ((result == "H") - h_prob) ** 2
-        + ((result == "A") - a_prob) ** 2
-        + ((result == "D") - d_prob) ** 2
-    )
+# # Using the log score because it's easy to implement
+# # Not really, I just want to annoy Richard Pettigrew
+# def score_prediction_log(prediction, result):
+#     """
+#     Scores a prediction based on a result.
+
+#     prediction: a tuple of (H,A,D) where each of H,A,D is an int
+#     result: one of H,A,D.
+#     """
+#     return log2(probability_for_outcome(prediction, result))
 
 
-def print_prediction(frame, prediction, title):
-    scores = frame.apply(
-        lambda x: score_prediction_log(prediction, x["result"]), axis=1
-    )
+# # OK fine I'll implement the Brier score too.
+# # Happy now, Richard?
+# def score_prediction_brier(prediction, result):
+#     h_prob = probability_for_outcome(prediction, "H")
+#     a_prob = probability_for_outcome(prediction, "A")
+#     d_prob = probability_for_outcome(prediction, "D")
+#     return (
+#         ((result == "H") - h_prob) ** 2
+#         + ((result == "A") - a_prob) ** 2
+#         + ((result == "D") - d_prob) ** 2
+#     )
+
+
+# def print_prediction(frame, prediction, title):
+#     scores_log = frame.apply(
+#         lambda x: score_prediction_log(prediction, x["result"]), axis=1
+#     )
+#     scores_brier = frame.apply(
+#         lambda x: score_prediction_brier(prediction, x["result"]), axis=1
+#     )
+#     print(f"{title} mean score.")
+#     print(f"     Log: {scores_log.mean()}")
+#     print(f"     Brier: {scores_brier.mean()}")
+
+
+def score_log(prediction, result):
+    return log2((prediction * result).sum(axis=1))
+
+
+def score_brier(prediction, result):
+    return ((result - prediction) ** 2).sum(axis=1)
+
+
+def print_scores(prediction, result, title):
+    print(f"{title} mean scores:")
+    print(f"     Log score: {score_log(prediction, result).mean()}")
+    print(f"     Brier score: {score_brier(prediction, result).mean()}")
