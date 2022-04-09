@@ -151,7 +151,7 @@ def probability_for_outcome(prediction, outcome):
 
 # Using the log score because it's easy to implement
 # Not really, I just want to annoy Richard Pettigrew
-def score_prediction(prediction, result):
+def score_prediction_log(prediction, result):
     """
     Scores a prediction based on a result.
 
@@ -171,4 +171,10 @@ def score_prediction_brier(prediction, result):
         ((result == "H") - h_prob) ** 2
         + ((result == "A") - a_prob) ** 2
         + ((result == "D") - d_prob) ** 2
+    )
+
+
+def print_prediction(frame, prediction, title):
+    scores = frame.apply(
+        lambda x: score_prediction_log(prediction, x["result"]), axis=1
     )

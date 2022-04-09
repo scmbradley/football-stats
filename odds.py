@@ -23,3 +23,5 @@ df = data[["Date", "HomeTeam", "AwayTeam", "FTR", "AvgH", "AvgA", "AvgD"]].copy(
 df["ProbH"] = 1 / df["AvgH"]
 df["ProbA"] = 1 / df["AvgA"]
 df["ProbD"] = 1 / df["AvgD"]
+
+# Could also look at normalised probabilites, but I suspect the differences would be minimal.

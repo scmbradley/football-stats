@@ -17,7 +17,8 @@ df = _df[_df["len_hist"] >= 5]
 
 
 # First prediction method:
-# simply predict based on the past five games of the home team.
+# Predict based on the proportion of home teams with this 5-game history
+# who go on to win the game.
 
 df["past_five_home"] = df.apply(lambda x: x["home_history"][-5:], axis=1)
 
@@ -42,22 +43,22 @@ df["home_predictions_full"] = home_predictions_full
 climatology = utilities.predictor_tuple(df["result"].value_counts())
 
 five_game_prediction_scores = df.apply(
-    lambda x: utilities.score_prediction(x["home_predictions_five"], x["result"]),
+    lambda x: utilities.score_prediction_log(x["home_predictions_five"], x["result"]),
     axis=1,
 )
 
 full_prediction_scores = df.apply(
-    lambda x: utilities.score_prediction(x["home_predictions_full"], x["result"]),
+    lambda x: utilities.score_prediction_log(x["home_predictions_full"], x["result"]),
     axis=1,
 )
 
 climatology_prediction_scores = df.apply(
-    lambda x: utilities.score_prediction(climatology, x["result"]),
+    lambda x: utilities.score_prediction_log(climatology, x["result"]),
     axis=1,
 )
 
 third_scores = df.apply(
-    lambda x: utilities.score_prediction((1, 1, 1), x["result"]),
+    lambda x: utilities.score_prediction_log((1, 1, 1), x["result"]),
     axis=1,
 )
 
