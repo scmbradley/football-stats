@@ -7,6 +7,10 @@ with open(clean_in) as d:
     _df = pd.read_csv(d, keep_default_na=False)
 
 
+print("Reminder: for log score, bigger is better, 0 is best.")
+print("For Brier score, smaller is better, 0 is best.")
+print("\n")
+
 # Remove the early games of the season since their history-based predictions are
 # all over the place.
 # Not strictly necessary, but it also makes log scores behave better...
@@ -56,7 +60,22 @@ past_five_prediction = pd.concat(
 # To make things easier, call a frame with the above shape a prediction frame
 # And call results_bools a results frame
 
-climatology = results_bools.mean()
-
 
 utilities.print_scores(past_five_prediction, results_bools, "Five score history")
+
+# Second prediction method:
+# Predict based on average win rate for home team
+
+home_team_average = results_bools.mean()
+
+# Acquire a frame of the right shape, and then set the columns to constants.
+home_team_average_prediction = results_bools.copy()
+
+for col in home_team_average_prediction.columns:
+    home_team_average_prediction[col] = home_team_average[col]
+
+utilities.print_scores(home_team_average_prediction, results_bools, "Home team average")
+
+# Third prediction method
+# What if you don't know which team is the home team?
+# Average home win/home loss columns
