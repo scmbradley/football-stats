@@ -15,7 +15,7 @@ print("\n")
 # all over the place.
 # Not strictly necessary, but it also makes log scores behave better...
 
-_df["len_hist"] = _df.apply(lambda x: len(x["home_history"]), axis=1)
+_df["len_hist"] = _df["home_history"].str.len()
 
 df = _df[_df["len_hist"] >= 5].copy()
 
