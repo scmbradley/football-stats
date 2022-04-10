@@ -71,11 +71,28 @@ home_team_average = results_bools.mean()
 # Acquire a frame of the right shape, and then set the columns to constants.
 home_team_average_prediction = results_bools.copy()
 
-for col in home_team_average_prediction.columns:
-    home_team_average_prediction[col] = home_team_average[col]
+
+home_team_average_prediction[["home_loss", "draw", "home_win"]] = home_team_average[
+    ["home_loss", "draw", "home_win"]
+]
 
 utilities.print_scores(home_team_average_prediction, results_bools, "Home team average")
 
 # Third prediction method
 # What if you don't know which team is the home team?
 # Average home win/home loss columns
+
+home_away_average_prob = home_team_average[["home_loss", "home_win"]].mean()
+draw_prob = home_team_average["draw"]
+
+home_away_average_prediction = results_bools.copy()
+home_away_average_prediction["draw"] = draw_prob
+home_away_average_prediction[["home_loss", "home_win"]] = home_away_average_prob
+
+
+utilities.print_scores(home_away_average_prediction, results_bools, "Home/Away average")
+
+thirds_prediction = results_bools.copy()
+thirds_prediction[["home_loss", "draw", "home_win"]] = 1 / 3
+
+utilities.print_scores(thirds_prediction, results_bools, "Thirds")
