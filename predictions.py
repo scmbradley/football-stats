@@ -76,12 +76,20 @@ past_five_away_prediction = pd.concat(
     [aw.rename("home_loss"), ad.rename("draw"), al.rename("home_win")], axis=1
 )
 
-utilities.print_scores(
-    past_five_home_prediction, results_bools_home, "Five game form (home)"
+# create a list of lists to use in graphing the data
+
+score_list = []
+
+score_list.append(
+    utilities.gen_score_list(
+        past_five_home_prediction, results_bools_home, "Five game form (home)"
+    )
 )
 
-utilities.print_scores(
-    past_five_away_prediction, results_bools_home, "Five game form (away)"
+score_list.append(
+    utilities.gen_score_list(
+        past_five_away_prediction, results_bools_home, "Five game form (away)"
+    )
 )
 
 
@@ -98,8 +106,10 @@ home_team_average_prediction[["home_loss", "draw", "home_win"]] = home_team_aver
     ["home_loss", "draw", "home_win"]
 ]
 
-utilities.print_scores(
-    home_team_average_prediction, results_bools_home, "Home team average"
+score_list.append(
+    utilities.gen_score_list(
+        home_team_average_prediction, results_bools_home, "Home team average"
+    )
 )
 
 # Third prediction method
@@ -114,14 +124,18 @@ home_away_average_prediction["draw"] = draw_prob
 home_away_average_prediction[["home_loss", "home_win"]] = home_away_average_prob
 
 
-utilities.print_scores(
-    home_away_average_prediction, results_bools_home, "Home/Away average"
+score_list.append(
+    utilities.gen_score_list(
+        home_away_average_prediction, results_bools_home, "Home/Away average"
+    )
 )
 
 thirds_prediction = results_bools_home.copy()
 thirds_prediction[["home_loss", "draw", "home_win"]] = 1 / 3
 
-utilities.print_scores(thirds_prediction, results_bools_home, "Thirds")
+score_list.append(
+    utilities.gen_score_list(thirds_prediction, results_bools_home, "Thirds")
+)
 
 # Final method: look to the odds.
 
@@ -140,4 +154,11 @@ predictions = odds_df[["ProbH", "ProbA", "ProbD"]].rename(
     columns={"ProbH": "home_win", "ProbA": "home_loss", "ProbD": "draw"}
 )
 
-utilities.print_scores(predictions, results, "Odds probabilities")
+score_list.append(utilities.gen_score_list(predictions, results, "Odds probabilities"))
+
+sl = pd.DataFrame(score_list, columns=["type", "log_score", "brier_score"])
+
+# Normalise log and brier scores so that 1 is best and 0 is worst.
+
+sl["log_norm"] = utilities.normalise_column(sl["log_score"])
+sl["brier_norm"] = 1 - utilities.normalise_column(sl["brier_score"])

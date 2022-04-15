@@ -122,7 +122,26 @@ def score_brier(prediction, result):
     return ((result - prediction) ** 2).sum(axis=1)
 
 
+def gen_score_list(prediction, result, title, printout=True):
+    ret = [
+        title,
+        score_log(prediction, result).mean(),
+        score_brier(prediction, result).mean(),
+    ]
+    if printout:
+        print_score_list(ret)
+    return ret
+
+
+def print_score_list(in_list):
+    print(f"{in_list[0]} mean scores:")
+    print(f"     Log score: {in_list[1]}")
+    print(f"     Brier score: {in_list[2]}")
+
+
 def print_scores(prediction, result, title):
-    print(f"{title} mean scores:")
-    print(f"     Log score: {score_log(prediction, result).mean()}")
-    print(f"     Brier score: {score_brier(prediction, result).mean()}")
+    print_score_list(gen_score_list(prediction, result, title))
+
+
+def normalise_column(series):
+    return (series - series.min()) / (series.max() - series.min())
