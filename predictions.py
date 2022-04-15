@@ -24,59 +24,83 @@ df = _df[_df["len_hist"] >= 5].copy()
 # Predict based on the proportion of home teams with this 5-game history
 # who go on to win the game.
 
+# Do this for home team and away team separately.
+
 
 df["past_five_home"] = df["home_history"].str[-5:]
+df["past_five_away"] = df["away_history"].str[-5:]
 
 # Create dummy variables for the categorical H/D/A result
 
-results_bools = (
+results_bools_home = (
     df["result"]
     .str.get_dummies()
     .rename(columns={"A": "home_loss", "D": "draw", "H": "home_win"})
 )
 
-df = pd.concat([df, results_bools], axis=1)
+df = pd.concat([df, results_bools_home], axis=1)
+
+# note that away_win == home_loss, and away_loss == home_win.
 
 # Use the fact that pivot table defaults to mean, to extract win/lose/draw
 # probabilities for each five game history.
 
-probs_frame = df.pivot_table(
+probs_frame_home = df.pivot_table(
     index="past_five_home", values=["home_loss", "draw", "home_win"]
+)
+
+probs_frame_away = df.pivot_table(
+    index="past_five_away", values=["home_win", "draw", "home_loss"]
 )
 
 # Use the columns of the pivot table as dictionaries to map
 # 5-game histories to win/loss/draw probabilities
 
-hw = df["past_five_home"].map(probs_frame["home_win"])
-draw = df["past_five_home"].map(probs_frame["draw"])
-hl = df["past_five_home"].map(probs_frame["home_loss"])
+hw = df["past_five_home"].map(probs_frame_home["home_win"])
+hd = df["past_five_home"].map(probs_frame_home["draw"])
+hl = df["past_five_home"].map(probs_frame_home["home_loss"])
+
+# same for away team:
+
+aw = df["past_five_away"].map(probs_frame_away["home_loss"])
+ad = df["past_five_away"].map(probs_frame_away["draw"])
+al = df["past_five_away"].map(probs_frame_away["home_win"])
 
 # Concat the above series into a frame that embodies the prediction
 
-past_five_prediction = pd.concat(
-    [hw.rename("home_win"), draw.rename("draw"), hl.rename("home_loss")], axis=1
+past_five_home_prediction = pd.concat(
+    [hw.rename("home_win"), hd.rename("draw"), hl.rename("home_loss")], axis=1
 )
 
-# To make things easier, call a frame with the above shape a prediction frame
-# And call results_bools a results frame
+past_five_away_prediction = pd.concat(
+    [aw.rename("home_loss"), ad.rename("draw"), al.rename("home_win")], axis=1
+)
 
+utilities.print_scores(
+    past_five_home_prediction, results_bools_home, "Five game form (home)"
+)
 
-utilities.print_scores(past_five_prediction, results_bools, "Five score history")
+utilities.print_scores(
+    past_five_away_prediction, results_bools_home, "Five game form (away)"
+)
+
 
 # Second prediction method:
 # Predict based on average win rate for home team
 
-home_team_average = results_bools.mean()
+home_team_average = results_bools_home.mean()
 
 # Acquire a frame of the right shape, and then set the columns to constants.
-home_team_average_prediction = results_bools.copy()
+home_team_average_prediction = results_bools_home.copy()
 
 
 home_team_average_prediction[["home_loss", "draw", "home_win"]] = home_team_average[
     ["home_loss", "draw", "home_win"]
 ]
 
-utilities.print_scores(home_team_average_prediction, results_bools, "Home team average")
+utilities.print_scores(
+    home_team_average_prediction, results_bools_home, "Home team average"
+)
 
 # Third prediction method
 # What if you don't know which team is the home team?
@@ -85,14 +109,35 @@ utilities.print_scores(home_team_average_prediction, results_bools, "Home team a
 home_away_average_prob = home_team_average[["home_loss", "home_win"]].mean()
 draw_prob = home_team_average["draw"]
 
-home_away_average_prediction = results_bools.copy()
+home_away_average_prediction = results_bools_home.copy()
 home_away_average_prediction["draw"] = draw_prob
 home_away_average_prediction[["home_loss", "home_win"]] = home_away_average_prob
 
 
-utilities.print_scores(home_away_average_prediction, results_bools, "Home/Away average")
+utilities.print_scores(
+    home_away_average_prediction, results_bools_home, "Home/Away average"
+)
 
-thirds_prediction = results_bools.copy()
+thirds_prediction = results_bools_home.copy()
 thirds_prediction[["home_loss", "draw", "home_win"]] = 1 / 3
 
-utilities.print_scores(thirds_prediction, results_bools, "Thirds")
+utilities.print_scores(thirds_prediction, results_bools_home, "Thirds")
+
+# Final method: look to the odds.
+
+odds_data = Path("odds_clean.csv")
+with open(odds_data) as d:
+    odds_df = pd.read_csv(d, keep_default_na=False)
+
+
+results = (
+    odds_df["FTR"]
+    .str.get_dummies()
+    .rename(columns={"A": "home_loss", "D": "draw", "H": "home_win"})
+)
+
+predictions = odds_df[["ProbH", "ProbA", "ProbD"]].rename(
+    columns={"ProbH": "home_win", "ProbA": "home_loss", "ProbD": "draw"}
+)
+
+utilities.print_scores(predictions, results, "Odds probabilities")
