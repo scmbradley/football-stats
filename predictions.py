@@ -16,9 +16,10 @@ print("\n")
 # all over the place.
 # Not strictly necessary, but it also makes log scores behave better...
 
-_df["len_hist"] = _df["home_history"].str.len()
+home_len = _df["home_history"].str.len()
+away_len = _df["away_history"].str.len()
 
-df = _df[_df["len_hist"] >= 5].copy()
+df = _df[(home_len >= 5) & (away_len >= 5)].copy()
 
 
 # First prediction method:
@@ -94,6 +95,39 @@ score_list.append(
 )
 
 
+# The above yields predictions based on form
+# but which also "knows" about whether the team is home or away.
+
+# To fix this, we need a weighted average of the two pivot tables,
+# weighted by how often that form is encountered with the home/away team.
+
+home_counts = df["past_five_home"].value_counts()
+away_counts = df["past_five_away"].value_counts()
+
+weights = home_counts / (home_counts + away_counts)
+
+probs_frame_unknown = probs_frame_home.mul(weights, axis=0) + probs_frame_away.mul(
+    1 - weights, axis=0
+)
+
+
+uw = df["past_five_home"].map(probs_frame_unknown["home_win"])
+ud = df["past_five_away"].map(probs_frame_unknown["draw"])
+ul = df["past_five_away"].map(probs_frame_unknown["home_loss"])
+
+# Concat the above series into a frame that embodies the prediction
+
+past_five_unknown_prediction = pd.concat(
+    [uw.rename("home_win"), ud.rename("draw"), ul.rename("home_loss")], axis=1
+)
+
+
+score_list.append(
+    utilities.gen_score_list(
+        past_five_unknown_prediction, results_bools_home, "Five game form (unknown)"
+    )
+)
+
 # Second prediction method:
 # Predict based on average win rate for home team
 
@@ -165,6 +199,6 @@ sl.set_index("type", inplace=True)
 sl["log_norm"] = utilities.normalise_column(sl["log_score"])
 sl["brier_norm"] = 1 - utilities.normalise_column(sl["brier_score"])
 
-sl.sort_values("log_norm")[["log_norm", "brier_norm"]].plot.bar()
-plt.xticks(rotation=45)
+sl.sort_values("log_norm")[["log_norm", "brier_norm"]].plot.barh()
+
 plt.show()
