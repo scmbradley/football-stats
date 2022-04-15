@@ -1,6 +1,7 @@
 from pathlib import Path
 import pandas as pd
 import utilities
+import matplotlib.pyplot as plt
 
 clean_in = Path("england_clean.csv")
 with open(clean_in) as d:
@@ -157,8 +158,13 @@ predictions = odds_df[["ProbH", "ProbA", "ProbD"]].rename(
 score_list.append(utilities.gen_score_list(predictions, results, "Odds probabilities"))
 
 sl = pd.DataFrame(score_list, columns=["type", "log_score", "brier_score"])
+sl.set_index("type", inplace=True)
 
 # Normalise log and brier scores so that 1 is best and 0 is worst.
 
 sl["log_norm"] = utilities.normalise_column(sl["log_score"])
 sl["brier_norm"] = 1 - utilities.normalise_column(sl["brier_score"])
+
+sl.sort_values("log_norm")[["log_norm", "brier_norm"]].plot.bar()
+plt.xticks(rotation=45)
+plt.show()
