@@ -108,6 +108,8 @@ score_list.append(
     )
 )
 
+score_list += utilities.create_form_scores(df, 3)
+
 # Second prediction method:
 # Predict based on average win rate for home team
 
@@ -170,6 +172,7 @@ predictions = odds_df[["ProbH", "ProbA", "ProbD"]].rename(
 )
 
 score_list.append(utilities.gen_score_list(predictions, results, "Odds"))
+
 
 sl = pd.DataFrame(score_list, columns=["type", "log_score", "brier_score"])
 sl.set_index("type", inplace=True)

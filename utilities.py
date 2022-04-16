@@ -140,10 +140,63 @@ def prob_frame_to_prediction(game_frame, col_name, prob_frame):
     return prediction
 
 
-def create_form_scores(game_frame, base_col_name, length):
+def create_form_scores(game_frame, length):
     """
     Create lists of scores for home, away and unknown form of length length.
 
     Function does not check whether shorter game histories have been removed.
     """
+    # Copy the dataframe and generate form columns of the right length.
+
     values = ["home_loss", "draw", "home_win"]
+    base_home_history = "home_history"
+    base_away_history = "away_history"
+    df = game_frame.copy()
+    df["form_home"] = df[base_home_history].str[-length:]
+    df["form_away"] = df[base_away_history].str[-length:]
+
+    # Generate home and away form probabilities
+
+    probs_frame_home = df.pivot_table(index="form_home", values=values)
+
+    probs_frame_away = df.pivot_table(index="form_away", values=values)
+
+    # Generate unknown form probabilities
+    home_counts = df["form_home"].value_counts()
+    away_counts = df["form_away"].value_counts()
+
+    weights = home_counts / (home_counts + away_counts)
+
+    probs_frame_unknown = probs_frame_home.mul(weights, axis=0) + probs_frame_away.mul(
+        1 - weights, axis=0
+    )
+
+    # Generate predictions
+    form_home_prediction = prob_frame_to_prediction(df, "form_home", probs_frame_home)
+
+    form_away_prediction = prob_frame_to_prediction(df, "form_away", probs_frame_away)
+
+    form_unknown_prediction = prob_frame_to_prediction(
+        df, "form_home", probs_frame_unknown
+    )
+
+    # Extract results:
+    results_bools = df[values]
+
+    # Score predictions
+    form_home_score = gen_score_list(
+        form_home_prediction, results_bools, f"Form ({length}, home)", printout=False
+    )
+
+    form_away_score = gen_score_list(
+        form_away_prediction, results_bools, f"Form ({length}, away)", printout=False
+    )
+
+    form_unknown_score = gen_score_list(
+        form_unknown_prediction,
+        results_bools,
+        f"Form ({length}, unknown)",
+        printout=False,
+    )
+
+    return [form_home_score, form_away_score, form_unknown_score]
