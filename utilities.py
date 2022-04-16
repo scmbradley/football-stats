@@ -1,11 +1,11 @@
-"""Utilities for doing generating new columns for football predictions"""
+"""Utilities for doing generating new columns for football predictions."""
 
 from numpy import log2
 import pandas as pd
 
 
 def get_teams_in_frame(frame):
-    """Returns a Series of names of teams in the frame."""
+    """Return a Series of names of teams in the frame."""
     return frame["home"].unique()
 
 
@@ -13,13 +13,13 @@ def get_teams_in_frame(frame):
 
 
 def games_with_team(name, frame):
-    """Returns a Frame of games including named team."""
+    """Return a Frame of games including named team."""
     return frame[(frame["home"] == name) | (frame["visitor"] == name)]
 
 
 def games_in_season(season, frame, before=None, tier=None):
     """
-    Returns a Frame including games from the specified season.
+    Return a Frame including games from the specified season.
 
     Optional filtering by date (before) and tier (tier).
     """
@@ -75,16 +75,6 @@ def points_from_history(s):
     return sum([points_dict[x] for x in s])
 
 
-# It will be useful later to extract the last five games, for example, from the full series
-def last_n_games(frame, n, away=False):
-    """Return the last n games of a history string."""
-    if away:
-        column = "away_history"
-    else:
-        column = "home_history"
-    return frame[column].values.tolist()[-n]
-
-
 # Also useful, as a comparison, the final record of results and points for a season
 
 
@@ -94,36 +84,18 @@ def get_full_season(team, season, frame):
     return hf.values.tolist()[-1]["home_history"]
 
 
-def prediction_from_history(history_string, home=True):
-    """Return a prediction tuple based purely on the history."""
-    w, l, d = 0, 0, 0
-    for game in history_string:
-        if game == "W":
-            w += 1
-        elif game == "L":
-            l += 1
-        elif game == "D":
-            d += 1
-    if home:
-        return w, l, d
-    else:
-        return l, w, d
-
-
-def get_final_points(team, season, frame):
-    """Return team's final points tally from season."""
-    return points_from_history(get_full_season(team, season, frame))
-
-
 def score_log(prediction, result):
+    """Return log score of predictions given results."""
     return log2((prediction * result).sum(axis=1))
 
 
 def score_brier(prediction, result):
+    """Return Brier score of prediction given results."""
     return ((result - prediction) ** 2).sum(axis=1)
 
 
 def gen_score_list(prediction, result, title, printout=True):
+    """Create score list for the score frame."""
     ret = [
         title,
         score_log(prediction, result).mean(),
@@ -135,12 +107,14 @@ def gen_score_list(prediction, result, title, printout=True):
 
 
 def print_score_list(in_list):
+    """Print score list."""
     print(f"{in_list[0]} mean scores:")
     print(f"     Log score: {in_list[1]}")
     print(f"     Brier score: {in_list[2]}")
 
 
 def print_scores(prediction, result, title):
+    """Print scores of predictions given results."""
     print_score_list(gen_score_list(prediction, result, title))
 
 
@@ -164,3 +138,12 @@ def prob_frame_to_prediction(game_frame, col_name, prob_frame):
         axis=1,
     )
     return prediction
+
+
+def create_form_scores(game_frame, base_col_name, length):
+    """
+    Create lists of scores for home, away and unknown form of length length.
+
+    Function does not check whether shorter game histories have been removed.
+    """
+    values = ["home_loss", "draw", "home_win"]
