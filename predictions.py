@@ -194,6 +194,9 @@ score_list.append(utilities.gen_score_list(predictions, results, "Odds probabili
 sl = pd.DataFrame(score_list, columns=["type", "log_score", "brier_score"])
 sl.set_index("type", inplace=True)
 
+score_frame_out = Path("score_frame.csv")
+sl.to_csv(score_frame_out)
+
 # Normalise log and brier scores so that 1 is best and 0 is worst.
 
 sl["log_norm"] = utilities.normalise_column(sl["log_score"])
