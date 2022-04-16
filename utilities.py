@@ -146,6 +146,7 @@ def create_form_scores(game_frame, length):
 
     Function does not check whether shorter game histories have been removed.
     """
+    print("Generating form prediction scores for length " + str(length))
     # Copy the dataframe and generate form columns of the right length.
 
     values = ["home_loss", "draw", "home_win"]
