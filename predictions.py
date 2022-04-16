@@ -55,27 +55,12 @@ probs_frame_away = df.pivot_table(
     index="past_five_away", values=["home_win", "draw", "home_loss"]
 )
 
-# Use the columns of the pivot table as dictionaries to map
-# 5-game histories to win/loss/draw probabilities
-
-hw = df["past_five_home"].map(probs_frame_home["home_win"])
-hd = df["past_five_home"].map(probs_frame_home["draw"])
-hl = df["past_five_home"].map(probs_frame_home["home_loss"])
-
-# same for away team:
-
-aw = df["past_five_away"].map(probs_frame_away["home_loss"])
-ad = df["past_five_away"].map(probs_frame_away["draw"])
-al = df["past_five_away"].map(probs_frame_away["home_win"])
-
-# Concat the above series into a frame that embodies the prediction
-
-past_five_home_prediction = pd.concat(
-    [hw.rename("home_win"), hd.rename("draw"), hl.rename("home_loss")], axis=1
+past_five_home_prediction = utilities.prob_frame_to_prediction(
+    df, "past_five_home", probs_frame_home
 )
 
-past_five_away_prediction = pd.concat(
-    [aw.rename("home_loss"), ad.rename("draw"), al.rename("home_win")], axis=1
+past_five_away_prediction = utilities.prob_frame_to_prediction(
+    df, "past_five_away", probs_frame_away
 )
 
 # create a list of lists to use in graphing the data
@@ -84,13 +69,13 @@ score_list = []
 
 score_list.append(
     utilities.gen_score_list(
-        past_five_home_prediction, results_bools_home, "Five game form (home)"
+        past_five_home_prediction, results_bools_home, "Form (5, home)"
     )
 )
 
 score_list.append(
     utilities.gen_score_list(
-        past_five_away_prediction, results_bools_home, "Five game form (away)"
+        past_five_away_prediction, results_bools_home, "Form (5, away)"
     )
 )
 
@@ -110,21 +95,16 @@ probs_frame_unknown = probs_frame_home.mul(weights, axis=0) + probs_frame_away.m
     1 - weights, axis=0
 )
 
-
-uw = df["past_five_home"].map(probs_frame_unknown["home_win"])
-ud = df["past_five_away"].map(probs_frame_unknown["draw"])
-ul = df["past_five_away"].map(probs_frame_unknown["home_loss"])
-
 # Concat the above series into a frame that embodies the prediction
 
-past_five_unknown_prediction = pd.concat(
-    [uw.rename("home_win"), ud.rename("draw"), ul.rename("home_loss")], axis=1
+past_five_unknown_prediction = utilities.prob_frame_to_prediction(
+    df, "past_five_home", probs_frame_unknown
 )
 
 
 score_list.append(
     utilities.gen_score_list(
-        past_five_unknown_prediction, results_bools_home, "Five game form (unknown)"
+        past_five_unknown_prediction, results_bools_home, "Form (5, Unknown)"
     )
 )
 
@@ -143,7 +123,7 @@ home_team_average_prediction[["home_loss", "draw", "home_win"]] = home_team_aver
 
 score_list.append(
     utilities.gen_score_list(
-        home_team_average_prediction, results_bools_home, "Home team average"
+        home_team_average_prediction, results_bools_home, "Home advantage"
     )
 )
 
@@ -161,7 +141,7 @@ home_away_average_prediction[["home_loss", "home_win"]] = home_away_average_prob
 
 score_list.append(
     utilities.gen_score_list(
-        home_away_average_prediction, results_bools_home, "Home/Away average"
+        home_away_average_prediction, results_bools_home, "Win/draw"
     )
 )
 
@@ -189,19 +169,20 @@ predictions = odds_df[["ProbH", "ProbA", "ProbD"]].rename(
     columns={"ProbH": "home_win", "ProbA": "home_loss", "ProbD": "draw"}
 )
 
-score_list.append(utilities.gen_score_list(predictions, results, "Odds probabilities"))
+score_list.append(utilities.gen_score_list(predictions, results, "Odds"))
 
 sl = pd.DataFrame(score_list, columns=["type", "log_score", "brier_score"])
 sl.set_index("type", inplace=True)
-
-score_frame_out = Path("score_frame.csv")
-sl.to_csv(score_frame_out)
 
 # Normalise log and brier scores so that 1 is best and 0 is worst.
 
 sl["log_norm"] = utilities.normalise_column(sl["log_score"])
 sl["brier_norm"] = 1 - utilities.normalise_column(sl["brier_score"])
 
-sl.sort_values("log_norm")[["log_norm", "brier_norm"]].plot.barh()
+score_frame_out = Path("score_frame.csv")
+sl.to_csv(score_frame_out)
 
-plt.show()
+
+# sl.sort_values("log_norm")[["log_norm", "brier_norm"]].plot.barh()
+
+# plt.show()

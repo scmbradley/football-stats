@@ -1,6 +1,7 @@
 """Utilities for doing generating new columns for football predictions"""
 
 from numpy import log2
+import pandas as pd
 
 
 def get_teams_in_frame(frame):
@@ -144,4 +145,22 @@ def print_scores(prediction, result, title):
 
 
 def normalise_column(series):
+    """Return min/max normalisation of a column."""
     return (series - series.min()) / (series.max() - series.min())
+
+
+def prob_frame_to_prediction(game_frame, col_name, prob_frame):
+    """
+    Return a prediction frame based on the input game frame and prob frame.
+
+    The col_name must be a data column whose entries match
+    the keys to the prob_frame.
+    """
+    w = game_frame[col_name].map(prob_frame["home_win"])
+    d = game_frame[col_name].map(prob_frame["draw"])
+    l = game_frame[col_name].map(prob_frame["home_loss"])
+    prediction = pd.concat(
+        [w.rename("home_win"), d.rename("draw"), l.rename("home_loss")],
+        axis=1,
+    )
+    return prediction
