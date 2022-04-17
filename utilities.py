@@ -140,7 +140,7 @@ def prob_frame_to_prediction(game_frame, col_name, prob_frame):
     return prediction
 
 
-def create_form_scores(game_frame, length):
+def create_form_scores(train_frame, test_frame, length):
     """
     Create lists of scores for home, away and unknown form of length length.
 
@@ -152,19 +152,28 @@ def create_form_scores(game_frame, length):
     values = ["home_loss", "draw", "home_win"]
     base_home_history = "home_history"
     base_away_history = "away_history"
-    df = game_frame.copy()
-    df["form_home"] = df[base_home_history].str[-length:]
-    df["form_away"] = df[base_away_history].str[-length:]
+    train = train_frame.copy()
+    test = test_frame.copy()
+    for frame in [test, train]:
+        frame["form_home"] = frame[base_home_history].str[-length:]
+        frame["form_away"] = frame[base_away_history].str[-length:]
+
+    form_vc = train["form_home"].value_counts()
+    print(
+        f"Minimum value count {form_vc.min()}, length {len(form_vc)} out of {3**length}"
+    )
 
     # Generate home and away form probabilities
+    # Use the fact that pivot table defaults to mean, to extract win/lose/draw
+    # probabilities for each game history.
 
-    probs_frame_home = df.pivot_table(index="form_home", values=values)
+    probs_frame_home = train.pivot_table(index="form_home", values=values)
 
-    probs_frame_away = df.pivot_table(index="form_away", values=values)
+    probs_frame_away = train.pivot_table(index="form_away", values=values)
 
     # Generate unknown form probabilities
-    home_counts = df["form_home"].value_counts()
-    away_counts = df["form_away"].value_counts()
+    home_counts = train["form_home"].value_counts()
+    away_counts = train["form_away"].value_counts()
 
     weights = home_counts / (home_counts + away_counts)
 
@@ -173,16 +182,16 @@ def create_form_scores(game_frame, length):
     )
 
     # Generate predictions
-    form_home_prediction = prob_frame_to_prediction(df, "form_home", probs_frame_home)
+    form_home_prediction = prob_frame_to_prediction(test, "form_home", probs_frame_home)
 
-    form_away_prediction = prob_frame_to_prediction(df, "form_away", probs_frame_away)
+    form_away_prediction = prob_frame_to_prediction(test, "form_away", probs_frame_away)
 
     form_unknown_prediction = prob_frame_to_prediction(
-        df, "form_home", probs_frame_unknown
+        test, "form_home", probs_frame_unknown
     )
 
     # Extract results:
-    results_bools = df[values]
+    results_bools = test[values]
 
     # Score predictions
     form_home_score = gen_score_list(
@@ -203,7 +212,7 @@ def create_form_scores(game_frame, length):
     return [form_home_score, form_away_score, form_unknown_score]
 
 
-def create_both_form_scores(game_frame, length):
+def create_both_form_scores(train_frame, test_frame, length):
     """
     Create score_list using predictions from both teams.
 
@@ -215,17 +224,29 @@ def create_both_form_scores(game_frame, length):
     values = ["home_loss", "draw", "home_win"]
     base_home_history = "home_history"
     base_away_history = "away_history"
-    df = game_frame.copy()
+    df_train = train_frame.copy()
+    df_test = test_frame.copy()
 
-    df["both_form"] = (
-        df[base_home_history].str[-length:] + df[base_away_history].str[-length:]
+    for frame in [df_train, df_test]:
+        frame["both_form"] = (
+            frame[base_home_history].str[-length:]
+            + frame[base_away_history].str[-length:]
+        )
+    form_vc = df_train["both_form"].value_counts()
+    print(
+        f"Minimum value count {form_vc.min()}, length {len(form_vc)} out of {3**(length*2)}"
     )
+
     # Extract results:
-    results_bools = df[values]
+    results_bools = df_test[values]
 
     # Generate probabilities
-    both_form_probs = df.pivot_table(index="both_form", values=values)
+    both_form_probs = df_train.pivot_table(index="both_form", values=values)
     # Generate predictions
-    both_form_prediction = prob_frame_to_prediction(df, "both_form", both_form_probs)
+    both_form_prediction = prob_frame_to_prediction(
+        df_test, "both_form", both_form_probs
+    )
 
-    return gen_score_list(both_form_prediction, results_bools, f"Both form ({length})")
+    return gen_score_list(
+        both_form_prediction, results_bools, f"Both form ({length})", printout=False
+    )

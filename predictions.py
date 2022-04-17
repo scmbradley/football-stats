@@ -1,3 +1,5 @@
+"""Generate and score predictions from football data."""
+
 from pathlib import Path
 import pandas as pd
 import utilities
@@ -31,21 +33,24 @@ df = _df[(home_len >= 5) & (away_len >= 5)].copy()
 
 # Create dummy variables for the categorical H/D/A result
 
-results_bools_home = (
+results_bools = (
     df["result"]
     .str.get_dummies()
     .rename(columns={"A": "home_loss", "D": "draw", "H": "home_win"})
 )
 
-df = pd.concat([df, results_bools_home], axis=1)
-
-
-# Use the fact that pivot table defaults to mean, to extract win/lose/draw
-# probabilities for each five game history.
+df = pd.concat([df, results_bools], axis=1)
+df_train = df[df["Season"] < 2018]
+df_test = df[df["Season"] >= 2018]
+results_train = df_train[["home_loss", "draw", "home_win"]]
+results_test = df_test[["home_loss", "draw", "home_win"]]
 
 # create a list of lists to use in graphing the data
 
 score_list = []
+
+for n in range(1, 6):
+    score_list += utilities.create_form_scores(df_train, df_test, n)
 
 # The above yields predictions based on form
 # but which also "knows" about whether the team is home or away.
@@ -53,17 +58,13 @@ score_list = []
 # To fix this, we need a weighted average of the two pivot tables,
 # weighted by how often that form is encountered with the home/away team.
 
-for n in range(1, 6):
-    score_list += utilities.create_form_scores(df, n)
-
-
 # Second prediction method:
 # Predict based on average win rate for home team
 
-home_team_average = results_bools_home.mean()
+home_team_average = results_train.mean()
 
 # Acquire a frame of the right shape, and then set the columns to constants.
-home_team_average_prediction = results_bools_home.copy()
+home_team_average_prediction = results_test.copy()
 
 
 home_team_average_prediction[["home_loss", "draw", "home_win"]] = home_team_average[
@@ -72,7 +73,7 @@ home_team_average_prediction[["home_loss", "draw", "home_win"]] = home_team_aver
 
 score_list.append(
     utilities.gen_score_list(
-        home_team_average_prediction, results_bools_home, "Home advantage"
+        home_team_average_prediction, results_test, "Home advantage"
     )
 )
 
@@ -83,29 +84,28 @@ score_list.append(
 home_away_average_prob = home_team_average[["home_loss", "home_win"]].mean()
 draw_prob = home_team_average["draw"]
 
-home_away_average_prediction = results_bools_home.copy()
+home_away_average_prediction = results_test.copy()
 home_away_average_prediction["draw"] = draw_prob
 home_away_average_prediction[["home_loss", "home_win"]] = home_away_average_prob
 
 
 score_list.append(
-    utilities.gen_score_list(
-        home_away_average_prediction, results_bools_home, "Win/draw"
-    )
+    utilities.gen_score_list(home_away_average_prediction, results_test, "Win/draw")
 )
 
-thirds_prediction = results_bools_home.copy()
+
+# Fourth prediction method:
+# literally just always guess one third.
+thirds_prediction = results_test.copy()
 thirds_prediction[["home_loss", "draw", "home_win"]] = 1 / 3
 
-score_list.append(
-    utilities.gen_score_list(thirds_prediction, results_bools_home, "Thirds")
-)
+score_list.append(utilities.gen_score_list(thirds_prediction, results_test, "Thirds"))
 
 # Predict using pivot table as before, but with a column of
 # 3 games from home and 3 games from away team.
 
 for n in [1, 2, 3]:
-    score_list.append(utilities.create_both_form_scores(df, n))
+    score_list.append(utilities.create_both_form_scores(df_train, df_test, n))
 
 
 # Final method: look to the odds.
