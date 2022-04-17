@@ -201,3 +201,31 @@ def create_form_scores(game_frame, length):
     )
 
     return [form_home_score, form_away_score, form_unknown_score]
+
+
+def create_both_form_scores(game_frame, length):
+    """
+    Create score_list using predictions from both teams.
+
+    Even with the full dataframe, this will only really work up to
+    length=3.
+    """
+    print("Generating form prediction scores for length " + str(length))
+    # Copy the dataframe and generate form columns of the right length.
+    values = ["home_loss", "draw", "home_win"]
+    base_home_history = "home_history"
+    base_away_history = "away_history"
+    df = game_frame.copy()
+
+    df["both_form"] = (
+        df[base_home_history].str[-length:] + df[base_away_history].str[-length:]
+    )
+    # Extract results:
+    results_bools = df[values]
+
+    # Generate probabilities
+    both_form_probs = df.pivot_table(index="both_form", values=values)
+    # Generate predictions
+    both_form_prediction = prob_frame_to_prediction(df, "both_form", both_form_probs)
+
+    return gen_score_list(both_form_prediction, results_bools, f"Both form ({length})")

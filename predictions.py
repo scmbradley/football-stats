@@ -101,6 +101,13 @@ score_list.append(
     utilities.gen_score_list(thirds_prediction, results_bools_home, "Thirds")
 )
 
+# Predict using pivot table as before, but with a column of
+# 3 games from home and 3 games from away team.
+
+for n in [1, 2, 3]:
+    score_list.append(utilities.create_both_form_scores(df, n))
+
+
 # Final method: look to the odds.
 
 odds_data = Path("odds_clean.csv")
@@ -134,3 +141,4 @@ sl.to_csv(score_frame_out)
 
 
 sl.sort_values("log_norm")[["log_norm", "brier_norm"]].plot.barh()
+plt.show()
