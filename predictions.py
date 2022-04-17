@@ -53,10 +53,9 @@ score_list = []
 # To fix this, we need a weighted average of the two pivot tables,
 # weighted by how often that form is encountered with the home/away team.
 
+for n in range(1, 6):
+    score_list += utilities.create_form_scores(df, n)
 
-score_list += utilities.create_form_scores(df, 5)
-score_list += utilities.create_form_scores(df, 3)
-score_list += utilities.create_form_scores(df, 1)
 
 # Second prediction method:
 # Predict based on average win rate for home team
