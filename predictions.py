@@ -140,5 +140,5 @@ score_frame_out = Path("score_frame.csv")
 sl.to_csv(score_frame_out)
 
 
-sl.sort_values("log_norm")[["log_norm", "brier_norm"]].plot.barh()
-plt.show()
+# sl.sort_values("log_norm")[["log_norm", "brier_norm"]].plot.barh()
+# plt.show()
