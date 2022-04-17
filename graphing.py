@@ -18,4 +18,7 @@ sl.sort_values("log_norm")[["log_norm", "brier_norm"]].plot.barh()
 # plt.xticks(rotation=45)
 plt.legend(loc="lower right")
 sns.despine(left=True)
-plt.savefig("summary.png")
+plt.tight_layout()
+plt.savefig("plots/summary.png")
+
+#
