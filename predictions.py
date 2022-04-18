@@ -18,10 +18,12 @@ print("\n")
 # all over the place.
 # Not strictly necessary, but it also makes log scores behave better...
 
+MAX_HISTORY = 6
+
 home_len = _df["home_history"].str.len()
 away_len = _df["away_history"].str.len()
 
-df = _df[(home_len >= 5) & (away_len >= 5)].copy()
+df = _df[(home_len >= MAX_HISTORY) & (away_len >= MAX_HISTORY)].copy()
 
 
 # First prediction method:
@@ -49,7 +51,7 @@ results_test = df_test[["home_loss", "draw", "home_win"]]
 
 score_list = []
 
-for n in range(1, 6):
+for n in range(1, MAX_HISTORY + 1):
     score_list += utilities.create_form_scores(df_train, df_test, n)
 
 # The above yields predictions based on form

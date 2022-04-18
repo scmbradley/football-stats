@@ -1,4 +1,4 @@
-"""Utilities for doing generating new columns for football predictions."""
+"""Utilities for generating new columns for football predictions."""
 
 from numpy import log2
 import pandas as pd
