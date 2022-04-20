@@ -44,6 +44,40 @@ home_result = {"H": "W", "D": "D", "A": "L"}
 away_result = {"H": "L", "D": "D", "A": "W"}
 
 
+def create_history_series(season):
+    """Return home and away history series for given season."""
+    home_histories = []
+    away_histories = []
+    for team in get_teams_in_frame(season):
+        # Extract home and away matches for team
+        home_results = season[season["home"] == team].copy()
+        away_results = season[season["visitor"] == team].copy()
+
+        # Translate A/D/H results into L/D/W for home and W/D/L for away
+        home_results["team_result"] = home_results["result"].map(home_result)
+        away_results["team_result"] = away_results["result"].map(away_result)
+
+        # Put the season's matches back together
+        team_results = pd.concat([home_results, away_results]).sort_index()
+
+        # Get cumulative results so far (removing current match)
+        team_results["form"] = team_results["team_result"].cumsum().str[:-1]
+
+        # Re-extract home and away series
+        home_bool = team_results["home"] == team
+        home_history = team_results[home_bool]["form"]
+        away_history = team_results[~home_bool]["form"]
+
+        # Add this team's form to the list of home/away forms
+        home_histories.append(home_history)
+        away_histories.append(away_history)
+
+    # Turn the lists of forms into pandas series and then return the pair
+    all_home = pd.concat(home_histories)
+    all_away = pd.concat(away_histories)
+    return all_home, all_away
+
+
 def game_to_result(game, team):
     """
     Translate a game into a result for the specified team.

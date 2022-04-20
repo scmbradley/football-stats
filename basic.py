@@ -1,6 +1,6 @@
 from pathlib import Path
 import requests
-import pandas
+import pandas as pd
 import utilities
 import time
 
@@ -17,44 +17,34 @@ if force or not data_raw.is_file():
     data_raw.write_text(download.content.decode("utf-8"))
 
 with open(data_raw) as d:
-    data = pandas.read_csv(d)
+    data = pd.read_csv(d)
 
 # To focus on 20 team premier league : season >= 1995, tier= 1
 # uncomment the next line, and comment out the one after.
 
-# data_f = data[(data["Season"] >= 1982) & (data["tier"] <= 2)]
+data_f = data[(data["Season"] >= 1982) & (data["tier"] <= 2)]
 
-data_f = data
+# data_f = data
 
 # Remove a lot of extraneous columns.
 df = data_f[["Date", "Season", "tier", "home", "visitor", "result"]].copy()
 
 
 # We now add columns for the season-to-date win/loss history.
-# This is quite slow, because it's using apply.
-# We should figure out how to do the same with groupby and cumsum.
+
 start = time.monotonic()
 df_groups = df.groupby("Season")
 print("Generating history")
-history_groups = []
+history_seasons_home = []
+history_seasons_away = []
 for year, season in df_groups:
     print(year)
-    season["home_history"] = season.apply(
-        lambda x: utilities.get_history_string(
-            x["home"], x["Season"], season, before=x["Date"]
-        ),
-        axis=1,
-    )
-    season["away_history"] = season.apply(
-        lambda x: utilities.get_history_string(
-            x["visitor"], x["Season"], season, before=x["Date"]
-        ),
-        axis=1,
-    )
-    history_groups.append(season)
+    h, a = utilities.create_history_series(season)
+    history_seasons_home.append(h)
+    history_seasons_away.append(a)
 
-df["home_history"] = pandas.concat(history_groups)["home_history"]
-df["away_history"] = pandas.concat(history_groups)["away_history"]
+df["home_history"] = pd.concat(history_seasons_home)
+df["away_history"] = pd.concat(history_seasons_away)
 
 
 print("Generating points")
