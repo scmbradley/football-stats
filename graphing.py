@@ -38,6 +38,7 @@ unknown_values = ["Win/draw"] + [
     f"Form ({n}, unknown)" for n in range(1, MAX_HISTORY + 1)
 ]
 
+both_values = ["Home advantage"] + [f"Both form ({n})" for n in range(1, 4)]
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9.6, 4.8))
 
@@ -71,21 +72,5 @@ plt.close("all")
 
 # Line graph of score versus both form length
 
-both_values = ["Home advantage"] + [f"Both form ({n})" for n in range(1, 4)]
-
-fig, ax1 = plt.subplots(1, 1)
-
-
-ax1.plot(sl["log_norm"][both_values].to_list(), label="Normalised log score")
-ax1.plot(sl["brier_norm"][both_values].to_list(), label="Normalised Brier score")
-
-plt.setp(ax1, xticks=np.arange(4), xticklabels=np.arange(4))
-fig.suptitle("Scores for both form predictions of length n")
-fig.tight_layout()
-fig.legend(loc=(0.4, 0.15))
-fig.tight_layout()
-plt.savefig("plots/score_both_form.png")
-
-# Line graph of score versus both form length
-
 plt.close("all")
+# Line graph of score versus both form length

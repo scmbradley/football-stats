@@ -22,9 +22,9 @@ with open(data_raw) as d:
 # To focus on 20 team premier league : season >= 1995, tier= 1
 # uncomment the next line, and comment out the one after.
 
-data_f = data[(data["Season"] >= 1982) & (data["tier"] <= 2)]
+# data_f = data[(data["Season"] >= 1982) & (data["tier"] <= 2)]
 
-# data_f = data
+data_f = data
 
 # Remove a lot of extraneous columns.
 df = data_f[["Date", "Season", "tier", "home", "visitor", "result"]].copy()
@@ -43,17 +43,17 @@ for year, season in df_groups:
     history_seasons_home.append(h)
     history_seasons_away.append(a)
 
-df["home_history"] = pd.concat(history_seasons_home)
-df["away_history"] = pd.concat(history_seasons_away)
+df[["home_history", "home_points"]] = pd.concat(history_seasons_home)
+df[["away_history", "away_points"]] = pd.concat(history_seasons_away)
 
 
-print("Generating points")
-df["home_points"] = df.apply(
-    lambda x: utilities.points_from_history(x["home_history"]), axis=1
-)
-df["away_points"] = df.apply(
-    lambda x: utilities.points_from_history(x["away_history"]), axis=1
-)
+# print("Generating points")
+# df["home_points"] = df.apply(
+#     lambda x: utilities.points_from_history(x["home_history"]), axis=1
+# )
+# df["away_points"] = df.apply(
+#     lambda x: utilities.points_from_history(x["away_history"]), axis=1
+# )
 
 # Write the useful information to a new file.
 clean_out = Path("england_clean.csv")

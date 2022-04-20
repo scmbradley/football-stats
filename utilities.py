@@ -42,6 +42,8 @@ def get_history_frame(team, season, frame, before=None):
 
 home_result = {"H": "W", "D": "D", "A": "L"}
 away_result = {"H": "L", "D": "D", "A": "W"}
+result_to_points_pre_1981 = {"W": 2, "D": 1, "L": 0}
+result_to_points = {"W": 3, "D": 1, "L": 0}
 
 
 def create_history_series(season):
@@ -62,11 +64,17 @@ def create_history_series(season):
 
         # Get cumulative results so far (removing current match)
         team_results["form"] = team_results["team_result"].cumsum().str[:-1]
+        team_results["points"] = (
+            team_results["team_result"]
+            .map(result_to_points)
+            .shift(fill_value=0)
+            .cumsum()
+        )
 
         # Re-extract home and away series
         home_bool = team_results["home"] == team
-        home_history = team_results[home_bool]["form"]
-        away_history = team_results[~home_bool]["form"]
+        home_history = team_results[home_bool][["form", "points"]]
+        away_history = team_results[~home_bool][["form", "points"]]
 
         # Add this team's form to the list of home/away forms
         home_histories.append(home_history)
