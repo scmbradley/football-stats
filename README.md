@@ -18,4 +18,7 @@ Finally, if desired, run `graphing.py` to create the graphs.
  - How does home advantage vary? (over a season, within a season)
    
 
+# Tagged versions
 
+ - [v1](https://github.com/scmbradley/football-stats/releases/tag/v1) was the version used for 
+   [the first football post on my blog](https://www.scmb.xyz/post/how-predictable-is-football/).
