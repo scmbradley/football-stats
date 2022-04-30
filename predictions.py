@@ -3,7 +3,7 @@
 from pathlib import Path
 import pandas as pd
 import utilities
-import matplotlib.pyplot as plt
+
 
 clean_in = Path("england_clean.csv")
 with open(clean_in) as d:
