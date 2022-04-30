@@ -17,15 +17,20 @@ with open(clean_in) as d:
 results_columns = ["home_loss", "draw", "home_win"]
 results_bools = df[results_columns]
 
-wins_per_season_avg = df.pivot_table(index="Season", values=results_columns)
+wins_per_season_avg = df.pivot_table(index="Season", values=results_columns).loc[
+    :, results_columns
+]
 wins_per_season_tot = df.pivot_table(
     index="Season", values=results_columns, aggfunc=sum
 )
 
-wins_per_season_avg.plot.area()
+ax = wins_per_season_avg.plot.area()
+ax.legend(
+    bbox_to_anchor=(0.2, -0.28, 0.6, 0.2), ncol=3, mode="expand", loc="upper left"
+)
 sns.despine(left=True, bottom=True)
 
-# TODO: stretch legend out below x axis labels
 # TODO: break down by tier
 # TODO: line graph of home wins only
+# TODO: rolling window version
 plt.show()
