@@ -35,13 +35,7 @@ df = _df[(home_len >= MAX_HISTORY) & (away_len >= MAX_HISTORY)].copy()
 
 # Create dummy variables for the categorical H/D/A result
 
-results_bools = (
-    df["result"]
-    .str.get_dummies()
-    .rename(columns={"A": "home_loss", "D": "draw", "H": "home_win"})
-)
-
-df = pd.concat([df, results_bools], axis=1)
+results_bools = df[["home_loss", "draw", "home_win"]]
 df_train = df[df["Season"] < 2018]
 df_test = df[df["Season"] >= 2018]
 results_train = df_train[["home_loss", "draw", "home_win"]]

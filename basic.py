@@ -45,7 +45,13 @@ for year, season in df_groups:
 
 df[["home_history", "home_points"]] = pd.concat(history_seasons_home)
 df[["away_history", "away_points"]] = pd.concat(history_seasons_away)
+results_bools = (
+    df["result"]
+    .str.get_dummies()
+    .rename(columns={"A": "home_loss", "D": "draw", "H": "home_win"})
+)
 
+df = pd.concat([df, results_bools], axis=1)
 
 # print("Generating points")
 # df["home_points"] = df.apply(
