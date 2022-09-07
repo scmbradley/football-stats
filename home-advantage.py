@@ -1,4 +1,4 @@
-"""Graphing home advantage over time"""
+"""Graphing home advantage over time."""
 
 from pathlib import Path
 import pandas as pd

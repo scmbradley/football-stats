@@ -3,7 +3,7 @@
 An attempt to learn something about predicting football games
 
 Run `basic.py` and `odds.py` to download and manipulate the data sources used for this analysis.
-The `basic.py` script will take some time to run (about 10 minutes on my laptop).
+The `basic.py` script will take some time to run.
 Then run `prediction.py` to create the predictions.
 Finally, if desired, run `graphing.py` to create the graphs.
 

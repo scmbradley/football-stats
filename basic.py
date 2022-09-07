@@ -1,3 +1,5 @@
+"""Download and clean football data."""
+
 from pathlib import Path
 import requests
 import pandas as pd

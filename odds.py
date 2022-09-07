@@ -1,3 +1,5 @@
+"""Generate odds and scores for football results."""
+
 import utilities
 from pathlib import Path
 import requests
